@@ -2,14 +2,32 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, ArrowLeft } from "lucide-react";
+// --- MODIFIKASI: Import ArrowRight ---
+import { Send, ArrowLeft, ArrowRight } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { motion } from "framer-motion";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
-// pertanyaan populer per divisi (mengikuti nama yang kamu tentukan)
+// --- MODIFIKASI: Fungsi Parser untuk memisahkan Text & Tag Redirect ---
+const parseMessageContent = (content) => {
+  if (!content) return { text: "", redirectTarget: null };
+
+  const redirectRegex = /\[\[REDIRECT:(.*?)\]\]/;
+  const match = content.match(redirectRegex);
+
+  if (match) {
+    return {
+      text: content.replace(match[0], "").trim(),
+      redirectTarget: match[1].trim(), // Contoh: "MRO"
+    };
+  }
+  return { text: content, redirectTarget: null };
+};
+// ---------------------------------------------------------------------
+
+// pertanyaan populer per divisi
 const POPULAR_QUESTIONS = {
   HCM: [
     "Bagaimana cara melamar kerja di PT Pindad?",
@@ -43,7 +61,7 @@ export default function ChatPage() {
 
   // id divisi = juga nama collection di backend
   const divisionId = params.get("dept") || "HCM";
-  
+
   const [divisionInfo, setDivisionInfo] = useState(null);
   const sessionIdRef = useRef(uuidv4());
 
@@ -60,7 +78,7 @@ export default function ChatPage() {
         const res = await fetch(`${API_BASE_URL}/divisions`);
         if (res.ok) {
           const list = await res.json();
-          const found = list.find(d => d.id === divisionId);
+          const found = list.find((d) => d.id === divisionId);
           if (found) setDivisionInfo(found);
         }
       } catch (e) {
@@ -81,12 +99,26 @@ export default function ChatPage() {
         "Apa saja produk unggulan Pindad?",
       ]
     );
+    // Reset messages ketika pindah divisi agar tidak bingung
+    setMessages([]);
   }, [divisionId]);
 
   // auto scroll ke bawah
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  // --- MODIFIKASI: Fungsi untuk Pindah Divisi ---
+  const handleSwitchDivision = (targetDiv) => {
+    // Navigate akan mengubah URL, yang mentrigger useEffect di atas untuk reset pesan
+    // Menggunakan window.open untuk mailto, navigate untuk internal
+    if (targetDiv === "MARKETING") {
+      window.open("mailto:sales@pindad.com");
+    } else {
+      navigate(`/chat?dept=${targetDiv}`);
+    }
+  };
+  // ---------------------------------------------
 
   async function sendAsk(text) {
     const content = (text ?? input).trim();
@@ -103,7 +135,7 @@ export default function ChatPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           session_id: sessionIdRef.current,
-          division: divisionId, // dikirim ke backend (MRO, TJSL, HCM, SCM, K3LH)
+          division: divisionId,
           message: content,
         }),
       });
@@ -151,7 +183,8 @@ export default function ChatPage() {
             Layanan Divisi {displayDiv}
           </div>
           <div className="text-lg text-gray-700 font-medium">
-            Anda berada di layanan {displayDiv}. Silakan ajukan pertanyaan Anda terkait {displayDesc}
+            Anda berada di layanan {displayDiv}. Silakan ajukan pertanyaan Anda
+            terkait {displayDesc}
           </div>
         </div>
       </div>
@@ -181,36 +214,76 @@ export default function ChatPage() {
 
       {/* AREA CHAT */}
       <div className="flex-1 overflow-auto p-4 space-y-4">
-        {messages.map((m) => (
-          <motion.div
-            key={m.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex ${
-              m.role === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div
-              className={`p-3 rounded-xl max-w-lg shadow text-lg ${
-                m.role === "user" ? "bg-blue-600 text-white" : "bg-white"
+        {messages.map((m) => {
+          // --- MODIFIKASI: Parsing pesan di sini ---
+          const { text, redirectTarget } = parseMessageContent(m.content);
+          // ----------------------------------------
+
+          return (
+            <motion.div
+              key={m.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex flex-col ${
+                m.role === "user" ? "items-end" : "items-start"
               }`}
             >
-              {m.content}
-            </div>
-          </motion.div>
-        ))}
+              <div
+                className={`p-3 rounded-xl max-w-lg shadow text-lg ${
+                  m.role === "user" ? "bg-blue-600 text-white" : "bg-white"
+                }`}
+              >
+                <p className="whitespace-pre-wrap">{text}</p>
+              </div>
+
+              {/* --- MODIFIKASI: Tampilkan Tombol Redirect jika ada --- */}
+              {!m.isUser && redirectTarget && m.role === "bot" && (
+                <div className="mt-2 ml-1">
+                  <span className="text-xs text-gray-500 block mb-1">
+                    Saran Tindakan:
+                  </span>
+
+                  {/* Tombol Pindah Room (General) */}
+                  {["MRO", "HCM", "SCM", "K3LH", "TJSL"].includes(
+                    redirectTarget
+                  ) && (
+                    <button
+                      onClick={() => handleSwitchDivision(redirectTarget)}
+                      className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-medium border border-blue-200 hover:bg-blue-100 transition"
+                    >
+                      <span>Pindah ke Room {redirectTarget}</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  )}
+
+                  {/* Tombol Email Sales */}
+                  {redirectTarget === "MARKETING" && (
+                    <button
+                      onClick={() => handleSwitchDivision("MARKETING")}
+                      className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-medium border border-green-200 hover:bg-green-100 transition"
+                    >
+                      <span>Email Sales Pindad</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  )}
+                </div>
+              )}
+              {/* ---------------------------------------------------- */}
+            </motion.div>
+          );
+        })}
 
         {isLoading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex justify-start p-4"  // <-- Moved logic mostly here
+            className="flex justify-start p-4"
           >
-             <div className="bg-white p-3 rounded-xl shadow-sm rounded-tl-none">
-              <img 
-                src="/Image/Logo putar.svg" 
-                alt="Loading..." 
-                className="w-8 h-8 animate-spin" 
+            <div className="bg-white p-3 rounded-xl shadow-sm rounded-tl-none">
+              <img
+                src="/Image/Logo putar.svg"
+                alt="Loading..."
+                className="w-8 h-8 animate-spin"
               />
             </div>
           </motion.div>
