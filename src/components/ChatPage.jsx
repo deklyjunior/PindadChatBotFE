@@ -28,12 +28,12 @@ const parseMessageContent = (content) => {
 // ---------------------------------------------------------------------
 
 const REDIRECT_MAP = {
-  "MRO": "MRO (Maintenance)",
-  "HCM": "HCM (Kepegawaian)",
-  "SCM": "SCM (Rantai Pasok)",
-  "TJSL": "TJSL (CSR & Lingkungan)",
-  "K3LH": "K3LH (Mutu & K3)",
-  "MARKETING": "Marketing / Sales" 
+  MRO: "MRO (Maintenance)",
+  HCM: "HCM (Kepegawaian)",
+  SCM: "SCM (Rantai Pasok)",
+  TJSL: "TJSL (CSR & Lingkungan)",
+  K3LH: "K3LH (Mutu & K3)",
+  MARKETING: "Marketing / Sales",
 };
 
 // pertanyaan populer per divisi
@@ -106,7 +106,7 @@ export default function ChatPage() {
       POPULAR_QUESTIONS[divisionId] ?? [
         "Apa itu PT Pindad?",
         "Apa saja produk unggulan Pindad?",
-      ]
+      ],
     );
     // Reset messages ketika pindah divisi agar tidak bingung
     setMessages([]);
@@ -253,16 +253,19 @@ export default function ChatPage() {
                   </span>
 
                   {/* LOGIKA TOMBOL UMUM (Berdasarkan REDIRECT_MAP) */}
-                  {Object.keys(REDIRECT_MAP).includes(redirectTarget) && redirectTarget !== "MARKETING" && (
-                    <button
-                      onClick={() => handleSwitchDivision(redirectTarget)}
-                      className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-medium border border-blue-200 hover:bg-blue-100 transition"
-                    >
-                      {/* Mengambil nama panjang dari Map */}
-                      <span>Pindah ke Room {REDIRECT_MAP[redirectTarget]}</span>
-                      <ArrowRight size={14} />
-                    </button>
-                  )}
+                  {Object.keys(REDIRECT_MAP).includes(redirectTarget) &&
+                    redirectTarget !== "MARKETING" && (
+                      <button
+                        onClick={() => handleSwitchDivision(redirectTarget)}
+                        className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-medium border border-blue-200 hover:bg-blue-100 transition"
+                      >
+                        {/* Mengambil nama panjang dari Map */}
+                        <span>
+                          Pindah ke Room {REDIRECT_MAP[redirectTarget]}
+                        </span>
+                        <ArrowRight size={14} />
+                      </button>
+                    )}
 
                   {/* LOGIKA TOMBOL KHUSUS MARKETING (Email) */}
                   {redirectTarget === "MARKETING" && (
@@ -276,7 +279,7 @@ export default function ChatPage() {
                   )}
                 </div>
               )}
-              
+
               {/* ---------------------------------------------------- */}
             </motion.div>
           );
