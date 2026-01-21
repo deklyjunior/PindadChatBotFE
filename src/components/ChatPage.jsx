@@ -2,41 +2,43 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// --- MODIFIKASI: Import ArrowRight ---
 import { Send, ArrowLeft, ArrowRight } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { motion } from "framer-motion";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
+// URL Backend
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
-// --- MODIFIKASI: Fungsi Parser untuk memisahkan Text & Tag Redirect ---
+// Fungsi Parser untuk memisahkan Text & Tag Redirect
 const parseMessageContent = (content) => {
   if (!content) return { text: "", redirectTarget: null };
 
-  const redirectRegex = /\[\[REDIRECT:(.*?)\]\]/;
-  const match = content.match(redirectRegex);
+  const redirectRegex = /\[\[\s*REDIRECT\s*:\s*(.*?)\s*\]\]/gi;
 
-  if (match) {
-    return {
-      text: content.replace(match[0], "").trim(),
-      redirectTarget: match[1].trim(), // Contoh: "MRO"
-    };
-  }
-  return { text: content, redirectTarget: null };
+  let finalTarget = null;
+
+  // Gunakan .replace dengan fungsi callback untuk membersihkan SEMUA tag
+  const cleanText = content.replace(redirectRegex, (match, id) => {
+    // Kita ambil ID dari tag pertama yang ditemukan untuk dijadikan prioritas tombol
+    // (Atau logika lain: ambil yang terakhir. Di sini kita ambil yang pertama)
+    if (!finalTarget) {
+      finalTarget = id.trim();
+    }
+
+    // Kembalikan string kosong "" untuk MENGHAPUS tag dari tampilan teks
+    return "";
+  });
+
+  return {
+    text: cleanText.trim(), // Teks sudah bersih dari semua tag
+    redirectTarget: finalTarget, // ID untuk tombol (misal: SCM)
+  };
 };
-// ---------------------------------------------------------------------
 
-const REDIRECT_MAP = {
-  MRO: "MRO (Maintenance)",
-  HCM: "HCM (Kepegawaian)",
-  SCM: "SCM (Rantai Pasok)",
-  TJSL: "TJSL (CSR & Lingkungan)",
-  K3LH: "K3LH (Mutu & K3)",
-  MARKETING: "Marketing / Sales",
-};
-
-// pertanyaan populer per divisi
+// Pertanyaan populer per divisi (Bisa tetap hardcoded atau dipindah ke backend nanti)
 const POPULAR_QUESTIONS = {
   HCM: [
     "Bagaimana cara melamar kerja di PT Pindad?",
@@ -68,10 +70,11 @@ export default function ChatPage() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
 
-  // id divisi = juga nama collection di backend
+  // id divisi (dept) dari URL
   const divisionId = params.get("dept") || "HCM";
 
   const [divisionInfo, setDivisionInfo] = useState(null);
+  const [allDivisions, setAllDivisions] = useState([]); // State untuk menyimpan SEMUA divisi
   const sessionIdRef = useRef(uuidv4());
 
   const [messages, setMessages] = useState([]);
@@ -80,13 +83,16 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
 
-  // Fetch division info (description) from backend
+  // 1. Fetch info divisi saat ini DAN daftar semua divisi untuk keperluan redirect
   useEffect(() => {
     async function fetchInfo() {
       try {
         const res = await fetch(`${API_BASE_URL}/divisions`);
         if (res.ok) {
           const list = await res.json();
+          setAllDivisions(list); // Simpan semua data divisi agar bisa dicari namanya nanti
+
+          // Set info divisi yang sedang aktif
           const found = list.find((d) => d.id === divisionId);
           if (found) setDivisionInfo(found);
         }
@@ -100,7 +106,7 @@ export default function ChatPage() {
   const displayDiv = divisionInfo?.name || divisionId;
   const displayDesc = divisionInfo?.description || "Layanan Umum PT Pindad";
 
-  // set popular question lokal sesuai ID divisi
+  // 2. Set pertanyaan populer lokal
   useEffect(() => {
     setPopular(
       POPULAR_QUESTIONS[divisionId] ?? [
@@ -108,32 +114,29 @@ export default function ChatPage() {
         "Apa saja produk unggulan Pindad?",
       ],
     );
-    // Reset messages ketika pindah divisi agar tidak bingung
+    // Reset messages ketika pindah divisi agar user merasa di room baru
     setMessages([]);
   }, [divisionId]);
 
-  // auto scroll ke bawah
+  // 3. Auto scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
-  // --- MODIFIKASI: Fungsi untuk Pindah Divisi ---
-  const handleSwitchDivision = (targetDiv) => {
-    // Navigate akan mengubah URL, yang mentrigger useEffect di atas untuk reset pesan
-    // Menggunakan window.open untuk mailto, navigate untuk internal
-    if (targetDiv === "MARKETING") {
+  // Fungsi Pindah Divisi
+  const handleSwitchDivision = (targetDivId) => {
+    if (targetDivId === "MARKETING") {
       window.open("mailto:sales@pindad.com");
     } else {
-      navigate(`/chat?dept=${targetDiv}`);
+      navigate(`/chat?dept=${targetDivId}`);
     }
   };
-  // ---------------------------------------------
 
   async function sendAsk(text) {
     const content = (text ?? input).trim();
     if (!content) return;
 
-    // tampilkan pertanyaan user
+    // Tampilkan pertanyaan user
     setMessages((m) => [...m, { id: Date.now(), role: "user", content }]);
     setInput("");
     setIsLoading(true);
@@ -189,16 +192,13 @@ export default function ChatPage() {
         <img src="/Chatbot/Image/logo.svg" alt="logo" className="w-12 h-12" />
         <div>
           <div className="text-2xl font-bold text-blue-900">
-            Layanan Divisi {displayDiv}
+            Layanan {displayDiv}
           </div>
-          <div className="text-lg text-gray-700 font-medium">
-            Anda berada di layanan {displayDiv}. Silakan ajukan pertanyaan Anda
-            terkait {displayDesc}
-          </div>
+          <div className="text-lg text-gray-700 font-medium">{displayDesc}</div>
         </div>
       </div>
 
-      {/* POPULAR QUESTION (KALAU CHAT MASIH KOSONG) */}
+      {/* POPULAR QUESTION (JIKA CHAT KOSONG) */}
       {messages.length === 0 && popular.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -224,9 +224,7 @@ export default function ChatPage() {
       {/* AREA CHAT */}
       <div className="flex-1 overflow-auto p-4 space-y-4">
         {messages.map((m) => {
-          // --- MODIFIKASI: Parsing pesan di sini ---
           const { text, redirectTarget } = parseMessageContent(m.content);
-          // ----------------------------------------
 
           return (
             <motion.div
@@ -242,45 +240,87 @@ export default function ChatPage() {
                   m.role === "user" ? "bg-blue-600 text-white" : "bg-white"
                 }`}
               >
-                <p className="whitespace-pre-wrap">{text}</p>
+                <div
+                  className={`markdown-content ${m.role === "user" ? "text-white" : "text-gray-800"}`}
+                >
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      ol: ({ node, ...props }) => (
+                        <ol
+                          className="list-decimal ml-5 space-y-1"
+                          {...props}
+                        />
+                      ),
+                      ul: ({ node, ...props }) => (
+                        <ul className="list-disc ml-5 space-y-1" {...props} />
+                      ),
+                      li: ({ node, ...props }) => (
+                        <li className="pl-1" {...props} />
+                      ),
+                      strong: ({ node, ...props }) => (
+                        <span className="font-bold" {...props} />
+                      ),
+                      a: ({ node, ...props }) => (
+                        <a
+                          className="text-blue-500 underline"
+                          target="_blank"
+                          {...props}
+                        />
+                      ),
+                      p: ({ node, ...props }) => (
+                        <p className="mb-2 last:mb-0" {...props} />
+                      ),
+                    }}
+                  >
+                    {text}
+                  </ReactMarkdown>
+                </div>
               </div>
 
-              {/* --- MODIFIKASI: Tampilkan Tombol Redirect*/}
+              {/* LOGIKA TOMBOL REDIRECT (DINAMIS) */}
               {redirectTarget && m.role === "bot" && (
                 <div className="mt-2 ml-1">
                   <span className="text-xs text-gray-500 block mb-1">
                     Saran Tindakan:
                   </span>
 
-                  {/* LOGIKA TOMBOL UMUM (Berdasarkan REDIRECT_MAP) */}
-                  {Object.keys(REDIRECT_MAP).includes(redirectTarget) &&
-                    redirectTarget !== "MARKETING" && (
-                      <button
-                        onClick={() => handleSwitchDivision(redirectTarget)}
-                        className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-medium border border-blue-200 hover:bg-blue-100 transition"
-                      >
-                        {/* Mengambil nama panjang dari Map */}
-                        <span>
-                          Pindah ke Room {REDIRECT_MAP[redirectTarget]}
-                        </span>
-                        <ArrowRight size={14} />
-                      </button>
-                    )}
+                  {/* IIFE untuk logika pencarian divisi */}
+                  {(() => {
+                    // Cari divisi di database berdasarkan ID dari tag [[REDIRECT:XXX]]
+                    const targetDiv = allDivisions.find(
+                      (d) => d.id === redirectTarget,
+                    );
 
-                  {/* LOGIKA TOMBOL KHUSUS MARKETING (Email) */}
-                  {redirectTarget === "MARKETING" && (
-                    <button
-                      onClick={() => handleSwitchDivision("MARKETING")}
-                      className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-medium border border-green-200 hover:bg-green-100 transition"
-                    >
-                      <span>Email Sales Pindad</span>
-                      <ArrowRight size={14} />
-                    </button>
-                  )}
+                    if (targetDiv) {
+                      return (
+                        <button
+                          onClick={() => handleSwitchDivision(targetDiv.id)}
+                          className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-medium border border-blue-200 hover:bg-blue-100 transition"
+                        >
+                          <span>Pindah ke Room {targetDiv.name}</span>
+                          <ArrowRight size={14} />
+                        </button>
+                      );
+                    }
+
+                    // Fallback khusus untuk Email Sales (jika masih diperlukan)
+                    if (redirectTarget === "MARKETING") {
+                      return (
+                        <button
+                          onClick={() => handleSwitchDivision("MARKETING")}
+                          className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-medium border border-green-200 hover:bg-green-100 transition"
+                        >
+                          <span>Email Sales Pindad</span>
+                          <ArrowRight size={14} />
+                        </button>
+                      );
+                    }
+
+                    return null; // Tidak render apa-apa jika ID tidak ditemukan
+                  })()}
                 </div>
               )}
-
-              {/* ---------------------------------------------------- */}
             </motion.div>
           );
         })}
