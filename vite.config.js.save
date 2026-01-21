@@ -10,7 +10,6 @@ const __dirname = path.dirname(__filename)
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/Chatbot/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
@@ -25,21 +24,7 @@ export default defineConfig({
       '/unanswered': 'http://127.0.0.1:8000',
       '/upload': 'http://127.0.0.1:8000',
       '/admin': 'http://127.0.0.1:8000',
-      '/api/chat': 'http://127.0.0.1:8000',
-    },
-  },
-  preview: {
-    port: 4173,
-    host: true, 
-    proxy: {
-      '/divisions': 'http://127.0.0.1:8000',
-      '/division': 'http://127.0.0.1:8000',
-      '/faqs': 'http://127.0.0.1:8000',
-      '/stats': 'http://127.0.0.1:8000',
-      '/unanswered': 'http://127.0.0.1:8000',
-      '/upload': 'http://127.0.0.1:8000',
-      '/admin': 'http://127.0.0.1:8000',
-      '/api/chat': 'http://127.0.0.1:8000',
+      '/chat?dept=${encodeURIComponent(d.id)}':,
     },
   },
 })

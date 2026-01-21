@@ -28,12 +28,12 @@ const parseMessageContent = (content) => {
 // ---------------------------------------------------------------------
 
 const REDIRECT_MAP = {
-  "MRO": "MRO (Maintenance)",
-  "HCM": "HCM (Kepegawaian)",
-  "SCM": "SCM (Rantai Pasok)",
-  "TJSL": "TJSL (CSR & Lingkungan)",
-  "K3LH": "K3LH (Mutu & K3)",
-  "MARKETING": "Marketing / Sales" 
+  "maintenance_repair_overhaul": "MRO",
+  "HCM": "HCM",
+  "supply_chain_rantai_pasok": "SCM",
+  "penjaminan_mutu_quality_assurance": "K3LH",
+  "tanggung_jawab_sosial_lingkungan": "TJSL",
+  "MARKETING": "Marketing"
 };
 
 // pertanyaan populer per divisi
@@ -245,38 +245,37 @@ export default function ChatPage() {
                 <p className="whitespace-pre-wrap">{text}</p>
               </div>
 
-              {/* --- MODIFIKASI: Tampilkan Tombol Redirect*/}
+              {/* --- MODIFIKASI: Tampilkan Tombol Redirect jika ada --- */}
               {redirectTarget && m.role === "bot" && (
-                <div className="mt-2 ml-1">
-                  <span className="text-xs text-gray-500 block mb-1">
-                    Saran Tindakan:
-                  </span>
+  <div className="mt-2 ml-1">
+    <span className="text-xs text-gray-500 block mb-1">
+      Saran Tindakan:
+    </span>
 
-                  {/* LOGIKA TOMBOL UMUM (Berdasarkan REDIRECT_MAP) */}
-                  {Object.keys(REDIRECT_MAP).includes(redirectTarget) && redirectTarget !== "MARKETING" && (
-                    <button
-                      onClick={() => handleSwitchDivision(redirectTarget)}
-                      className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-medium border border-blue-200 hover:bg-blue-100 transition"
-                    >
-                      {/* Mengambil nama panjang dari Map */}
-                      <span>Pindah ke Room {REDIRECT_MAP[redirectTarget]}</span>
-                      <ArrowRight size={14} />
-                    </button>
-                  )}
+    {/* Cek apakah target ada di daftar REDIRECT_MAP */}
+    {Object.keys(REDIRECT_MAP).includes(redirectTarget) && redirectTarget !== "MARKETING" && (
+      <button
+        onClick={() => handleSwitchDivision(redirectTarget)}
+        className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-medium border border-blue-200 hover:bg-blue-100 transition"
+      >
+        {/* Tampilkan Nama Pendek (MRO) agar tombol tidak kepanjangan */}
+        <span>Pindah ke Room {REDIRECT_MAP[redirectTarget]}</span>
+        <ArrowRight size={14} />
+      </button>
+    )}
 
-                  {/* LOGIKA TOMBOL KHUSUS MARKETING (Email) */}
-                  {redirectTarget === "MARKETING" && (
-                    <button
-                      onClick={() => handleSwitchDivision("MARKETING")}
-                      className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-medium border border-green-200 hover:bg-green-100 transition"
-                    >
-                      <span>Email Sales Pindad</span>
-                      <ArrowRight size={14} />
-                    </button>
-                  )}
-                </div>
-              )}
-              
+    {/* Tombol Khusus Marketing (Email) */}
+    {redirectTarget === "MARKETING" && (
+      <button
+        onClick={() => handleSwitchDivision("MARKETING")}
+        className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-medium border border-green-200 hover:bg-green-100 transition"
+      >
+        <span>Email Sales Pindad</span>
+        <ArrowRight size={14} />
+      </button>
+    )}
+  </div>
+)}
               {/* ---------------------------------------------------- */}
             </motion.div>
           );

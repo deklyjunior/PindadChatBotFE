@@ -11,7 +11,7 @@ import {
   HeartHandshake,
 } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
 function GreetingPage() {
   const location = useLocation();
@@ -150,7 +150,7 @@ function GreetingPage() {
       </AnimatePresence>
 
       <motion.img
-        src="/Image/logo.svg"
+        src="/Chatbot/Image/logo.svg"
         className="w-24 h-24 mb-6"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

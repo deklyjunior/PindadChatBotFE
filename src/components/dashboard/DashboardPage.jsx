@@ -41,6 +41,7 @@ export default function DashboardPage() {
     fetchFaqs();
     fetchStats();
     fetchUnanswered();
+    document.title = "Dashboard - Pindad Virtual Assistant";
 
     // Polling / Real-time update every 5 seconds
     const interval = setInterval(() => {
@@ -243,6 +244,18 @@ export default function DashboardPage() {
     }
   }
 
+  const handleUploadClick = () => {
+    // Tampilkan dialog konfirmasi bawaan browser
+    const isConfirmed = window.confirm(
+      "apakah yakin ingin mengupload faq baru, faq lama akan terhapus",
+    );
+
+    // Jika user klik OK (true), jalankan fungsi uploadFile
+    if (isConfirmed) {
+      uploadFile();
+    }
+  };
+
   // ---------------- UI ----------------
   return (
     <div className="p-4 space-y-4 bg-linear-to-br from-gray-50 to-blue-100 min-h-screen font-sans flex flex-col">
@@ -437,7 +450,7 @@ export default function DashboardPage() {
                 <Button 
                    className="w-full" 
                    disabled={!file || loading} 
-                   onClick={uploadFile}
+                   onClick={handleUploadClick}
                 >
                   <UploadCloud className="w-4 h-4 mr-2" />
                   {loading ? "Uploading..." : "Upload"}
