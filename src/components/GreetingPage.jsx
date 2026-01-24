@@ -112,8 +112,8 @@ function GreetingPage() {
       </AnimatePresence>
 
       <motion.img
-        src="/Chatbot/Image/logopinda.png"
-        className="w-40 h-40 mb-3"
+        src="/Chatbot/Image/logo.svg"
+        className="w-24 h-24 mb-6"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: baseDelay, duration: 0.6 }}

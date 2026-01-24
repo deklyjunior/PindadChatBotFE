@@ -352,7 +352,7 @@ export default function DashboardPage() {
                     {
                       label: "Hits",
                       data: stats.monthly.map((x) => x.count),
-                      borderColor: "rgb(200,151,33)",
+                      borderColor: "rgb(37,99,235)",
                       borderWidth: 2,
                       pointRadius: 3,
                     },
@@ -396,7 +396,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <Card className="shadow-sm bg-[rgb(0,0,128)] text-white">
+            <Card className="shadow-sm bg-blue-600 text-white">
               <CardContent className="p-4 text-center">
                 <div className="text-3xl font-bold">{faqs.length}</div>
                 <div className="text-sm opacity-90">Total Documents</div>

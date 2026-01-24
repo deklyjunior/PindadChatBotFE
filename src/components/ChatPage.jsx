@@ -189,11 +189,7 @@ export default function ChatPage() {
         >
           <ArrowLeft className="w-6 h-6" />
         </Button>
-        <img
-          src="/Chatbot/Image/logopinda.png"
-          alt="logo"
-          className="w-17 h-17"
-        />
+        <img src="/Chatbot/Image/logo.svg" alt="logo" className="w-12 h-12" />
         <div>
           <div className="text-2xl font-bold text-blue-900">
             Layanan {displayDiv}
