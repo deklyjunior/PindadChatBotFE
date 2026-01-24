@@ -123,26 +123,34 @@ export default function DashboardPage() {
   }
 
   async function addDivision() {
-    if (!newDivisionName.trim()) return alert("Nama divisi kosong");
-    try {
-      const r = await fetch("/division", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newDivisionName }),
-      });
+  if (!newDivisionName.trim()) return alert("Nama divisi kosong");
+  
+  try { // <--- Start Try Utama
+    const r = await fetch("/division", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newDivisionName }),
+    });
 
-      if (r.ok) {
-        setNewDivisionName("");
-        fetchDivisions();
-        alert("Divisi ditambahkan");
-      } else {
+    if (r.ok) {
+      setNewDivisionName("");
+      fetchDivisions();
+      alert("Divisi ditambahkan");
+    } else {
+      try {
+        const errData = await r.json();
+        alert(`Gagal menambahkan divisi: ${errData.detail}`);
+      } catch (e) {
         const errorText = await r.text();
         alert(`Gagal menambahkan divisi: ${errorText}`);
       }
-    } catch (e) {
-      console.error(e);
     }
-  }
+  } catch (err) { // <--- Catch untuk Try Utama (WAJIB ADA)
+    console.error(err);
+    alert("Gagal menghubungi server");
+  } // <--- Penutup Try Utama
+} // <--- Penutup Fungsi
+  
 
   async function updateDescription(id, newDesc) {
     const r = await fetch(`/division/${id}`, {

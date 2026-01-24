@@ -59,8 +59,6 @@ function GreetingPage() {
           TJSL: "Tanggung Jawab Sosial & Lingkungan",
           HCM: "Human Capital Management",
           SCM: "Supply Chain / Rantai Pasok",
-          Rantai_Pasok: "Supply Chain / Rantai Pasok",
-          PM_K3LH: "Penjaminan Mutu / Quality Assurance",
           K3LH: "Penjaminan Mutu / Quality Assurance",
         };
 
