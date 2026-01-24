@@ -132,17 +132,19 @@ export default function DashboardPage() {
       body: JSON.stringify({ name: newDivisionName }),
     });
 
-    if (r.ok) {
-      setNewDivisionName("");
-      fetchDivisions();
-      alert("Divisi ditambahkan");
-    } else {
-      try {
-        const errData = await r.json();
-        alert(`Gagal menambahkan divisi: ${errData.detail}`);
-      } catch (e) {
-        const errorText = await r.text();
-        alert(`Gagal menambahkan divisi: ${errorText}`);
+      if (r.ok) {
+        setNewDivisionName("");
+        fetchDivisions();
+        alert("Divisi ditambahkan");
+      } else {
+        try {
+          const errorJson = await r.json(); // Parsing JSON
+          alert(`Gagal menambahkan divisi: ${errorJson.detail}`); // Ambil property 'detail'
+        } catch (err) {
+          // Fallback jika response bukan JSON valid
+          const errorText = await r.text();
+          alert(`Gagal menambahkan divisi: ${errorText}`);
+        }
       }
     }
   } catch (err) { // <--- Catch untuk Try Utama (WAJIB ADA)
@@ -216,7 +218,7 @@ export default function DashboardPage() {
 
     // 1. TAMPILKAN ALERT KONFIRMASI (Sesuai Permintaan)
     const isConfirmed = window.confirm(
-      "Apakah Anda yakin ingin mengupload dokumen baru? Dokumen lama pada divisi ini akan terhapus (dan diunduh otomatis sebagai backup jika ada).",
+      "Apakah Anda yakin ingin mengupload dokumen baru? Dokumen lama pada divisi ini akan terhapus (Sebaiknya medownload dulu Dokumen FAQ sebelumya).",
     );
 
     // Jika user klik Cancel, batalkan proses

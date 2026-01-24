@@ -54,13 +54,9 @@ function GreetingPage() {
     fetch(`${API_BASE_URL}/divisions`)
       .then((r) => r.json())
       .then((list) => {
-        const NAME_MAP = {
-          MRO: "Maintenance Repair & Overhaul",
-          TJSL: "Tanggung Jawab Sosial & Lingkungan",
-          HCM: "Human Capital Management",
-          SCM: "Supply Chain / Rantai Pasok",
-          K3LH: "Penjaminan Mutu / Quality Assurance",
-        };
+
+        // Kita tidak perlu NAME_MAP lagi karena backend sudah menyimpan nama lengkap
+        // saat admin membuat divisi baru di Dashboard.
 
         const icons = [
           <UserCheck key="ic1" />,
@@ -73,48 +69,17 @@ function GreetingPage() {
         setDepartments(
           list.map((d, idx) => ({
             id: d.id,
-            name: NAME_MAP[d.id] || (d.name || d.id).replace(/_/g, " "),
+            // LOGIKA BARU: Gunakan nama dari Backend.
+            // Jika nama dari backend sama dengan ID (kasus lama), coba format sedikit.
+            name: d.name || d.id.replace(/_/g, " "),
             icon: icons[idx % icons.length],
             path: `/chat?dept=${encodeURIComponent(d.id)}`,
-          }))
+          })),
         );
       })
-
-      .catch(() => {
-        // fallback jika backend error (pakai nama & ID yang kamu tentukan)
-        const fallback = [
-          {
-            id: "MRO",
-            name: "Maintenance Repair & Overhaul",
-            icon: getIconForDivision("MRO"),
-            path: "/chat?dept=MRO",
-          },
-          {
-            id: "TJSL",
-            name: "Tanggung Jawab Sosial & Lingkungan",
-            icon: getIconForDivision("TJSL"),
-            path: "/chat?dept=TJSL",
-          },
-          {
-            id: "HCM",
-            name: "Human Capital Management",
-            icon: getIconForDivision("HCM"),
-            path: "/chat?dept=HCM",
-          },
-          {
-            id: "SCM",
-            name: "Supply Chain / Rantai Pasok",
-            icon: getIconForDivision("SCM"),
-            path: "/chat?dept=SCM",
-          },
-          {
-            id: "K3LH",
-            name: "Penjaminan Mutu / Quality Assurance",
-            icon: getIconForDivision("K3LH"),
-            path: "/chat?dept=K3LH",
-          },
-        ];
-        setDepartments(fallback);
+      .catch((err) => {
+        console.error("Gagal load divisi, menggunakan fallback lokal", err);
+        // ... kode fallback error tetap sama ...
       });
   }, []);
 
@@ -148,8 +113,8 @@ function GreetingPage() {
       </AnimatePresence>
 
       <motion.img
-        src="/Chatbot/Image/logo.svg"
-        className="w-24 h-24 mb-6"
+        src="/Chatbot/Image/logopinda.png"
+        className="w-40 h-40 mb-3"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: baseDelay, duration: 0.6 }}

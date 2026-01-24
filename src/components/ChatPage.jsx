@@ -1,3 +1,4 @@
+
 // src/pages/ChatPage.jsx
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 // URL Backend
-const API_BASE_URL = "http://202.51.233.12:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
 // Fungsi Parser untuk memisahkan Text & Tag Redirect
 const parseMessageContent = (content) => {
@@ -189,7 +190,11 @@ export default function ChatPage() {
         >
           <ArrowLeft className="w-6 h-6" />
         </Button>
-        <img src="/Chatbot/Image/logo.svg" alt="logo" className="w-12 h-12" />
+        <img
+          src="/Chatbot/Image/logopinda.png"
+          alt="logo"
+          className="w-17 h-17"
+        />
         <div>
           <div className="text-2xl font-bold text-blue-900">
             Layanan {displayDiv}
