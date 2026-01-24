@@ -136,8 +136,14 @@ export default function DashboardPage() {
         fetchDivisions();
         alert("Divisi ditambahkan");
       } else {
-        const errorText = await r.text();
-        alert(`Gagal menambahkan divisi: ${errorText}`);
+        try {
+          const errorJson = await r.json(); // Parsing JSON
+          alert(`Gagal menambahkan divisi: ${errorJson.detail}`); // Ambil property 'detail'
+        } catch (err) {
+          // Fallback jika response bukan JSON valid
+          const errorText = await r.text();
+          alert(`Gagal menambahkan divisi: ${errorText}`);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -208,7 +214,7 @@ export default function DashboardPage() {
 
     // 1. TAMPILKAN ALERT KONFIRMASI (Sesuai Permintaan)
     const isConfirmed = window.confirm(
-      "Apakah Anda yakin ingin mengupload dokumen baru? Dokumen lama pada divisi ini akan terhapus (dan diunduh otomatis sebagai backup jika ada).",
+      "Apakah Anda yakin ingin mengupload dokumen baru? Dokumen lama pada divisi ini akan terhapus (Sebaiknya medownload dulu Dokumen FAQ sebelumya).",
     );
 
     // Jika user klik Cancel, batalkan proses
@@ -346,7 +352,7 @@ export default function DashboardPage() {
                     {
                       label: "Hits",
                       data: stats.monthly.map((x) => x.count),
-                      borderColor: "rgb(37,99,235)",
+                      borderColor: "rgb(200,151,33)",
                       borderWidth: 2,
                       pointRadius: 3,
                     },
@@ -390,7 +396,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <Card className="shadow-sm bg-blue-600 text-white">
+            <Card className="shadow-sm bg-[rgb(0,0,128)] text-white">
               <CardContent className="p-4 text-center">
                 <div className="text-3xl font-bold">{faqs.length}</div>
                 <div className="text-sm opacity-90">Total Documents</div>
