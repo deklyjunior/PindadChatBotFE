@@ -249,7 +249,7 @@ export default function DashboardPage() {
 
   // ---------------- UI ----------------
   return (
-    <div className="p-4 space-y-4 bg-linear-to-br from-gray-50 to-blue-100 min-h-screen font-sans flex flex-col">
+    <div className="p-4 space-y-4 min-h-screen font-sans flex flex-col bg-linear-to-br from-[#E0F2FE] via-white to-[#FEF9C3]">
       <h1 className="text-2xl font-bold text-blue-900">
         Admin Dashboard — FAQ & Upload
       </h1>
@@ -263,7 +263,7 @@ export default function DashboardPage() {
             className="h-full"
           >
             <Card className="shadow-sm h-full flex flex-col">
-              <CardHeader className="pb-2 shrink-0">
+              <CardHeader className="pb-0 shrink-0">
                 <CardTitle className="text-lg">Divisions</CardTitle>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col min-h-0">
@@ -339,7 +339,7 @@ export default function DashboardPage() {
         {/* ==== MIDDLE: ANALYTICS & TABLES ==== */}
         <div className="lg:col-span-5 space-y-4 flex flex-col h-full">
           {/* CHART */}
-          <Card className="p-3 shadow-sm flex-1 min-h-[300px]">
+          <Card className="p-3 shadow-sm flex-1 min-h-[300pxp-3 shadow-lg flex-1 min-h-[300px] bg-white/90 backdrop-blur-sm border-blue-100]">
             <CardTitle className="text-base mb-2">
               Analytics — Hits/Month
             </CardTitle>
@@ -356,9 +356,12 @@ export default function DashboardPage() {
                     {
                       label: "Hits",
                       data: stats.monthly.map((x) => x.count),
-                      borderColor: "rgb(37,99,235)",
+                      // Warna Chart disesuaikan dengan tema
+                      borderColor: "#1e3a8a", // Blue-900
+                      backgroundColor: "#c89721", // Gold accent point
                       borderWidth: 2,
-                      pointRadius: 3,
+                      pointRadius: 4,
+                      pointBackgroundColor: "#c89721",
                     },
                   ],
                 }}
@@ -375,17 +378,17 @@ export default function DashboardPage() {
               {unanswered.map((x) => (
                 <div
                   key={x.id}
-                  className="p-2 bg-red-50 rounded border border-red-100 text-sm"
+                  className="p-3 bg-red-50 rounded border border-red-100 text-sm hover:bg-red-100 transition-colors"
                 >
                   <div className="font-medium text-red-900">{x.question}</div>
-                  <div className="flex justify-between text-xs text-red-500 mt-1">
+                  <div className="flex justify-between text-xs text-red-500 mt-2 border-t border-red-200 pt-1">
                     <span>Div: {x.division_id ?? "Umum"}</span>
                     <span>{x.created_at}</span>
                   </div>
                 </div>
               ))}
               {unanswered.length === 0 && (
-                <p className="text-gray-400 text-xs text-center py-4">
+                <p className="h-full flex flex-col items-center justify-center text-gray-400 text-xs py-4">
                   Aman, semua terjawab.
                 </p>
               )}
@@ -400,7 +403,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <Card className="shadow-sm bg-blue-600 text-white">
+            <Card className="shadow-lg bg-blue-900 text-white border-none">
               <CardContent className="p-4 text-center">
                 <div className="text-3xl font-bold">{faqs.length}</div>
                 <div className="text-sm opacity-90">Total Documents</div>
@@ -419,13 +422,13 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-3 pt-0">
                 <div>
-                  <label className="text-xs font-medium text-gray-500">
+                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wide block mb-1">
                     Target Division
                   </label>
                   <select
                     value={selectedDiv || ""}
                     onChange={(e) => setSelectedDiv(e.target.value)}
-                    className="w-full p-2 border rounded text-sm bg-white"
+                    className="w-full p-2 mt-1 border rounded text-sm bg-white focus:ring-2 focus:ring-[#000080] outline-none"
                   >
                     {divisions.map((d) => (
                       <option key={d.id} value={d.id}>
@@ -436,14 +439,14 @@ export default function DashboardPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-gray-500 block mb-1">
+                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wide block mb-1">
                     File (PDF)
                   </label>
                   <input
                     type="file"
                     accept=".pdf"
                     onChange={onFileChange}
-                    className="text-xs w-full"
+                    className="text-xs w-full p-2 bg-gray-50 border rounded cursor-pointer"
                   />
                 </div>
 
@@ -461,16 +464,17 @@ export default function DashboardPage() {
 
           {/* PREVIEW MINI LIST */}
           <div className="bg-white rounded-xl shadow-sm border p-3 flex-1 flex flex-col min-h-[200px]">
-            <h2 className="text-sm font-semibold text-gray-600 shrink-0">
+            <h2 className="text-sm font-semibold text-gray-600 shrink-0 mb-2">
               Recent FAQ
             </h2>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-3">
               <input
                 type="password"
                 value={adminSecret}
                 onChange={(e) => setAdminSecret(e.target.value)}
-                className="text-xs border rounded px-2 py-1 flex-1"
+                className="text-xs border rounded px-2 py-1 flex-1 bg-gray-100 cursor-not-allowed text-gray-400"
                 placeholder="Admin Secret"
+                disabled
               />
             </div>
             <div className="space-y-2 overflow-y-auto flex-1 pr-1 max-h-[30vh]">
@@ -480,7 +484,10 @@ export default function DashboardPage() {
                   className="text-xs border-b pb-1 flex justify-between items-start"
                 >
                   <div className="overflow-hidden mr-2">
-                    <div className="font-medium truncate" title={f.question}>
+                    <div
+                      className="text-xs font-bold text-gray-600 uppercase tracking-wide"
+                      title={f.question}
+                    >
                       {f.question}
                     </div>
                     <div className="text-gray-400">{f.division_id}</div>
@@ -488,7 +495,7 @@ export default function DashboardPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 shrink-0"
+                    className="h-6 w-6 shrink-0 text-gray-600 hover:text-blue-600 hover:bg-blue-100"
                     title="Download Source PDF"
                     onClick={() => {
                       const name =
@@ -504,7 +511,9 @@ export default function DashboardPage() {
                 </div>
               ))}
               {faqs.length === 0 && (
-                <p className="text-xs text-gray-400">Belum ada data.</p>
+                <p className="text-xs text-gray-400 text-center py-4">
+                  Belum ada data.
+                </p>
               )}
             </div>
           </div>

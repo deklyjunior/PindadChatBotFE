@@ -54,7 +54,6 @@ function GreetingPage() {
     fetch(`${API_BASE_URL}/divisions`)
       .then((r) => r.json())
       .then((list) => {
-
         // Kita tidak perlu NAME_MAP lagi karena backend sudah menyimpan nama lengkap
         // saat admin membuat divisi baru di Dashboard.
 
@@ -114,7 +113,7 @@ function GreetingPage() {
 
       <motion.img
         src="/Chatbot/Image/logopinda.png"
-        className="w-40 h-40 mb-3"
+        className="w-40 h-40"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: baseDelay, duration: 0.6 }}
@@ -124,9 +123,10 @@ function GreetingPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: baseDelay + 0.3, duration: 0.6 }}
-        className="text-3xl md:text-4xl font-bold text-blue-900 mb-3"
+        className="text-3xl md:text-4xl text-blue-900 mb-3 font-sans tracking-[0.01em] "
       >
-        PINDAD Virtual Assistant
+        <span className="font-medium">TANYA </span>
+        <span className="font-extrabold">CAKRA</span>
       </motion.h1>
 
       <motion.div
@@ -141,7 +141,7 @@ function GreetingPage() {
             key={d.id}
             variant="outline"
             size="lg"
-            className="w-full sm:w-80 h-auto min-h-[5rem] text-base font-semibold shadow-sm hover:shadow-lg hover:scale-[1.03] transition-all duration-200 p-4"
+            className="w-full sm:w-80 h-auto min-h-[5rem] text-base font-semibold shadow-sm hover:shadow-lg hover:scale-[1.03] transition-all duration-200 p-4 border-2 border-[#c89721]"
           >
             <Link to={d.path} state={{ deptName: d.name }}>
               <div className="flex items-center justify-center gap-3 whitespace-normal text-center leading-tight w-full">

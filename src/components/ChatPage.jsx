@@ -1,4 +1,3 @@
-
 // src/pages/ChatPage.jsx
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 // URL Backend
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://202.51.233.12:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
 // Fungsi Parser untuk memisahkan Text & Tag Redirect
 const parseMessageContent = (content) => {
@@ -91,9 +90,8 @@ export default function ChatPage() {
         const res = await fetch(`${API_BASE_URL}/divisions`);
         if (res.ok) {
           const list = await res.json();
-          setAllDivisions(list); // Simpan semua data divisi agar bisa dicari namanya nanti
+          setAllDivisions(list);
 
-          // Set info divisi yang sedang aktif
           const found = list.find((d) => d.id === divisionId);
           if (found) setDivisionInfo(found);
         }
