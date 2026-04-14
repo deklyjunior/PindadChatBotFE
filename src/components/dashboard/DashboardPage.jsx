@@ -326,7 +326,7 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="text-xs text-gray-700 bg-gray-50 p-1.5 rounded border">
-                        {d.description || "- No description -"}
+                        {d.description?.trim() || "- No description -"}
                       </div>
                     </li>
                   ))}
