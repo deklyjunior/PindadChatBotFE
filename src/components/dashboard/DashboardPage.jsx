@@ -306,8 +306,8 @@ export default function DashboardPage() {
                                 "Update Deskripsi Divisi:",
                                 d.description || "",
                               );
-                              if (newDesc !== null) {
-                                updateDescription(d.id, newDesc);
+                              if (newDesc !== null && newDesc.trim() !== "") {
+                                updateDescription(d.id, newDesc.trim());
                               }
                             }}
                           >
