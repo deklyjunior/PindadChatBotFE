@@ -154,9 +154,11 @@ export default function ChatPage() {
       const j = await res.json();
 
       const botReply =
-        j.answer && String(j.answer).trim() !== ""
+        j.answer &&
+        String(j.answer).trim() !== "" &&
+        String(j.answer).trim() !== "Empty Response"
           ? j.answer
-          : "Maaf, saya tidak menemukan jawaban yang relevan dari dokumen terkait.";
+          : "Jawaban belum tersedia. Hubungi PT Pindad di +62 22 7312073 atau email ke info@pindad.com ya.";
 
       setMessages((m) => [
         ...m,
