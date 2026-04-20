@@ -10,7 +10,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 // URL Backend
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://202.51.233.12:8000";
 
 // Fungsi Parser untuk memisahkan Text & Tag Redirect
 const parseMessageContent = (content) => {
@@ -156,7 +156,7 @@ export default function ChatPage() {
       const botReply =
         j.answer &&
         String(j.answer).trim() !== "" &&
-        !String(j.answer).toLowerCase().includes("empty response")
+        !String(j.answer).toLowerCase().includes("Jawaban belum tersedia. Hubungi PT Pindad di +62 22 7312073 atau email ke info@pindad.com ya.")
           ? j.answer
           : "Jawaban belum tersedia. Hubungi PT Pindad di +62 22 7312073 atau email ke info@pindad.com ya.";
 
