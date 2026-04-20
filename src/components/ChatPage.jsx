@@ -10,7 +10,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 // URL Backend
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://202.51.233.12:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
 // Fungsi Parser untuk memisahkan Text & Tag Redirect
 const parseMessageContent = (content) => {
