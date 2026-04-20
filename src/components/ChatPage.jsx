@@ -193,7 +193,7 @@ export default function ChatPage() {
           <ArrowLeft className="w-6 h-6" />
         </Button>
         <img
-          src="/Chatbot/Image/logopinda.png"
+          src="/Image/logopinda.png"
           alt="logo"
           className="w-17 h-17"
         />
@@ -340,7 +340,7 @@ export default function ChatPage() {
           >
             <div className="bg-white p-3 rounded-xl shadow-sm rounded-tl-none">
               <img
-                src="/Chatbot/Image/Logo putar.svg"
+                src="/Image/Logo putar.svg"
                 alt="Loading..."
                 className="w-8 h-8 animate-spin"
               />

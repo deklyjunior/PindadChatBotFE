@@ -50,7 +50,7 @@ function AnimatedRoutes() {
 
 export default function App() {
   return (
-    <Router basename="/Chatbot">
+    <Router basename="/">
       <AnimatedRoutes />
     </Router>
   );
