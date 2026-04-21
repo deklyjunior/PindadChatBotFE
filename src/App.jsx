@@ -36,7 +36,7 @@ function AnimatedRoutes() {
           }
         />
         <Route
-          path="/dashboard"
+          path="/sysadmin-portal-x8k9m2"
           element={
             <PageTransition>
               <DashboardPage />
