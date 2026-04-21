@@ -36,7 +36,7 @@ function AnimatedRoutes() {
           }
         />
         <Route
-          path="/sysadmin-portal-x8k9m2"
+          path={import.meta.env.VITE_DASHBOARD_URL || "/fallback-admin"}
           element={
             <PageTransition>
               <DashboardPage />
