@@ -184,24 +184,27 @@ export default function ChatPage() {
   return (
     <div className="h-screen overflow-hidden flex flex-col bg-linear-to-br from-blue-50 to-blue-200">
       {/* HEADER */}
-      <div className="shrink-0 p-4 bg-white/70 backdrop-blur border-b flex items-center gap-4 shadow-sm z-50">
+      <div className="shrink-0 p-3 md:p-4 bg-white/70 backdrop-blur border-b flex items-start md:items-center gap-3 md:gap-4 shadow-sm z-50">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => navigate("/", { state: { fromChat: true } })}
+          className="shrink-0 mt-1 md:mt-0"
         >
-          <ArrowLeft className="w-6 h-6" />
+          <ArrowLeft className="w-5 h-5 md:w-5 md:h-5" />
         </Button>
         <img
           src="/Image/logopinda.png"
           alt="logo"
-          className="w-17 h-17"
+          className="w-12 h-12 md:w-16 md:h-16 object-contain shrink-0 mt-1 md:mt-0"
         />
-        <div>
-          <div className="text-2xl font-bold text-blue-900">
+        <div className="flex-1 min-w-0">
+          <div className="text-base md:text-xl font-bold text-blue-900 leading-tight mb-1">
             Layanan {displayDiv}
           </div>
-          <div className="text-lg text-gray-700 font-medium">{displayDesc}</div>
+          <div className="text-xs md:text-sm text-gray-700 font-medium max-h-20 lg:max-h-32 overflow-y-auto pr-1">
+            {displayDesc}
+          </div>
         </div>
       </div>
 
