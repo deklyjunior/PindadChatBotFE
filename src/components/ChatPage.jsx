@@ -213,16 +213,17 @@ export default function ChatPage() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 text-center bg-white/70 backdrop-blur shadow"
+          className="p-2 md:p-3 text-center bg-white/70 backdrop-blur shadow"
         >
-          <div className="text-sm text-gray-600">Pertanyaan Populer:</div>
-          <div className="flex flex-wrap gap-2 justify-center mt-3">
+          <div className="text-xs md:text-sm text-gray-600 mb-1.5 md:mb-3">Pertanyaan Populer:</div>
+          <div className="flex flex-wrap gap-1.5 md:gap-2 justify-center">
             {popular.map((q, i) => (
               <Button
                 key={i}
                 variant="secondary"
                 size="sm"
                 onClick={() => sendAsk(q)}
+                className="h-7 px-2.5 text-[11px] md:h-9 md:px-3 md:text-sm"
               >
                 {q}
               </Button>
