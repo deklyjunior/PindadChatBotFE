@@ -111,7 +111,20 @@ export default function DashboardPage() {
         fetchStats();
       } else {
         const errorText = await r.text();
-        alert(`Upload gagal: ${errorText}`);
+        if (r.status === 413) {
+          alert("Upload gagal: Ukuran file terlalu besar.");
+        } else if (errorText.toLowerCase().includes("<html")) {
+          const match = errorText.match(/<title>(.*?)<\\/title>/i);
+          const errorMsg = match ? match[1] : `Server Error ${r.status}`;
+          alert(`Upload gagal: ${errorMsg}`);
+        } else {
+          try {
+            const errorJson = JSON.parse(errorText);
+            alert(`Upload gagal: ${errorJson.detail || errorJson.error || "Terjadi kesalahan"}`);
+          } catch (e) {
+            alert(`Upload gagal: ${errorText}`);
+          }
+        }
       }
     } catch (e) {
       console.error(e);
@@ -138,13 +151,18 @@ export default function DashboardPage() {
         fetchDivisions();
         alert("Divisi ditambahkan");
       } else {
+        const errorText = await r.text();
         try {
-          const errorJson = await r.json(); // Parsing JSON
-          alert(`Gagal menambahkan divisi: ${errorJson.detail}`); // Ambil property 'detail'
+          const errorJson = JSON.parse(errorText);
+          alert(`Gagal menambahkan divisi: ${errorJson.detail || "Terjadi kesalahan"}`);
         } catch (err) {
-          // Fallback jika response bukan JSON valid
-          const errorText = await r.text();
-          alert(`Gagal menambahkan divisi: ${errorText}`);
+          if (errorText.toLowerCase().includes("<html")) {
+            const match = errorText.match(/<title>(.*?)<\\/title>/i);
+            const errorMsg = match ? match[1] : `Server Error ${r.status}`;
+            alert(`Gagal menambahkan divisi: ${errorMsg}`);
+          } else {
+            alert(`Gagal menambahkan divisi: ${errorText}`);
+          }
         }
       }
     } catch (err) {
