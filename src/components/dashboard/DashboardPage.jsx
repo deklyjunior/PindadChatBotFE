@@ -114,7 +114,7 @@ export default function DashboardPage() {
         if (r.status === 413) {
           alert("Upload gagal: Ukuran file terlalu besar.");
         } else if (errorText.toLowerCase().includes("<html")) {
-          const match = errorText.match(/<title>(.*?)<\\/title>/i);
+          const match = errorText.match(/<title>(.*?)<\/title>/i);
           const errorMsg = match ? match[1] : `Server Error ${r.status}`;
           alert(`Upload gagal: ${errorMsg}`);
         } else {
@@ -157,7 +157,7 @@ export default function DashboardPage() {
           alert(`Gagal menambahkan divisi: ${errorJson.detail || "Terjadi kesalahan"}`);
         } catch (err) {
           if (errorText.toLowerCase().includes("<html")) {
-            const match = errorText.match(/<title>(.*?)<\\/title>/i);
+            const match = errorText.match(/<title>(.*?)<\/title>/i);
             const errorMsg = match ? match[1] : `Server Error ${r.status}`;
             alert(`Gagal menambahkan divisi: ${errorMsg}`);
           } else {
