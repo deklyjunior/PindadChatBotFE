@@ -134,6 +134,10 @@ export default function ChatPage() {
   async function sendAsk(text) {
     const content = (text ?? input).trim();
     if (!content) return;
+    if (content.length > 4096) {
+      alert("Pesan terlalu panjang. Maksimal 4096 karakter.");
+      return;
+    }
 
     // Tampilkan pertanyaan user
     setMessages((m) => [...m, { id: Date.now(), role: "user", content }]);
@@ -357,17 +361,25 @@ export default function ChatPage() {
 
       {/* INPUT */}
       <div className="p-4 bg-white border-t shadow-lg">
-        <div className="max-w-4xl mx-auto flex gap-2">
-          <Input
-            placeholder="Ketik pertanyaan..."
-            value={input}
-            className="text-lg"
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendAsk()}
-          />
-          <Button onClick={() => sendAsk()}>
-            <Send />
-          </Button>
+        <div className="max-w-4xl mx-auto flex flex-col gap-1">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Ketik pertanyaan..."
+              value={input}
+              className="text-lg"
+              maxLength={4096}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && sendAsk()}
+            />
+            <Button onClick={() => sendAsk()}>
+              <Send />
+            </Button>
+          </div>
+          {input.length > 3800 && (
+            <div className="text-xs text-amber-600 self-end">
+              {input.length}/4096
+            </div>
+          )}
         </div>
       </div>
     </div>

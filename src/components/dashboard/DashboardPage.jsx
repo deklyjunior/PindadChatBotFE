@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, Trash2, Download } from "lucide-react";
+import { UploadCloud, Trash2, Download, Shield, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { Line } from "react-chartjs-2";
 
@@ -28,15 +28,33 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ monthly: [] });
   const [unanswered, setUnanswered] = useState([]);
   const [newDivisionName, setNewDivisionName] = useState("");
-  const [adminSecret, setAdminSecret] = useState("rahasia_admin");
+  
+  // Authentication states
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [adminToken, setAdminToken] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  // Forgot password flow states
+  const [authStep, setAuthStep] = useState("login"); // "login", "forgot_email", "forgot_reset"
+  const [securityQuestion, setSecurityQuestion] = useState("");
+  const [securityAnswer, setSecurityAnswer] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
-    fetchDivisions();
-    fetchFaqs();
-    fetchStats();
-    fetchUnanswered();
+    if (isAuthenticated) {
+      fetchDivisions();
+      fetchFaqs();
+      fetchStats();
+      fetchUnanswered();
+    }
     document.title = "Dashboard - Pindad Virtual Assistant";
+  }, [isAuthenticated]);
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
     const interval = setInterval(() => {
       fetchStats();
       fetchFaqs();
@@ -44,12 +62,113 @@ export default function DashboardPage() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isAuthenticated]);
+
+  // Helper function to handle auth errors
+  function handleAuthError(r) {
+    if (r.status === 401) {
+      setIsAuthenticated(false);
+      setAdminToken("");
+      alert("Sesi admin berakhir. Silakan login ulang.");
+      return true;
+    }
+    return false;
+  }
+
+  // ---------------- AUTHENTICATION HANDLERS ----------------
+  async function handleLogin(e) {
+    if (e) e.preventDefault();
+    if (!email.trim() || !password.trim()) return;
+    setLoginLoading(true);
+    setLoginError("");
+    try {
+      const r = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      if (r.status === 401) {
+        setLoginError("Email atau password salah.");
+      } else if (r.ok) {
+        const data = await r.json();
+        setAdminToken(data.token);
+        setIsAuthenticated(true);
+        setPassword("");
+      } else {
+        setLoginError("Terjadi kesalahan pada server.");
+      }
+    } catch (err) {
+      console.error(err);
+      setLoginError("Gagal menghubungi server.");
+    } finally {
+      setLoginLoading(false);
+    }
+  }
+
+  async function handleForgotPasswordEmail(e) {
+    if (e) e.preventDefault();
+    if (!email.trim()) return;
+    setLoginLoading(true);
+    setLoginError("");
+    try {
+      const r = await fetch("/api/auth/forgot-password/question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      if (r.status === 404) {
+        setLoginError("Email tidak terdaftar.");
+      } else if (r.ok) {
+        const data = await r.json();
+        setSecurityQuestion(data.security_question);
+        setAuthStep("forgot_reset");
+      } else {
+        setLoginError("Gagal memuat pertanyaan keamanan.");
+      }
+    } catch (err) {
+      console.error(err);
+      setLoginError("Gagal menghubungi server.");
+    } finally {
+      setLoginLoading(false);
+    }
+  }
+
+  async function handleForgotPasswordReset(e) {
+    if (e) e.preventDefault();
+    if (!securityAnswer.trim() || !newPassword.trim()) return;
+    setLoginLoading(true);
+    setLoginError("");
+    try {
+      const r = await fetch("/api/auth/forgot-password/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, security_answer: securityAnswer, new_password: newPassword })
+      });
+      if (r.status === 400) {
+        setLoginError("Jawaban pertanyaan keamanan salah.");
+      } else if (r.ok) {
+        alert("Password berhasil direset! Silakan login.");
+        setSecurityAnswer("");
+        setNewPassword("");
+        setAuthStep("login");
+      } else {
+        setLoginError("Gagal mereset password.");
+      }
+    } catch (err) {
+      console.error(err);
+      setLoginError("Gagal menghubungi server.");
+    } finally {
+      setLoginLoading(false);
+    }
+  }
 
   // ---------------- FETCH SECTION ----------------
   async function fetchDivisions() {
     try {
-      const r = await fetch("/divisions");
+      const r = await fetch("/divisions", {
+        headers: { "X-Admin-Token": adminToken }
+      });
+      if (handleAuthError(r)) return;
       const list = await r.json();
       setDivisions(list);
       if (list.length && !selectedDiv) setSelectedDiv(list[0].id);
@@ -60,7 +179,10 @@ export default function DashboardPage() {
 
   async function fetchFaqs() {
     try {
-      const r = await fetch("/faqs");
+      const r = await fetch("/faqs", {
+        headers: { "X-Admin-Token": adminToken }
+      });
+      if (handleAuthError(r)) return;
       setFaqs(r.ok ? await r.json() : []);
     } catch (e) {
       console.error(e);
@@ -69,7 +191,10 @@ export default function DashboardPage() {
 
   async function fetchStats() {
     try {
-      const r = await fetch("/stats");
+      const r = await fetch("/stats", {
+        headers: { "X-Admin-Token": adminToken }
+      });
+      if (handleAuthError(r)) return;
       if (r.ok) setStats(await r.json());
     } catch (e) {
       console.error(e);
@@ -78,7 +203,10 @@ export default function DashboardPage() {
 
   async function fetchUnanswered() {
     try {
-      const r = await fetch("/unanswered");
+      const r = await fetch("/unanswered", {
+        headers: { "X-Admin-Token": adminToken }
+      });
+      if (handleAuthError(r)) return;
       setUnanswered(r.ok ? await r.json() : []);
     } catch (e) {
       console.error(e);
@@ -90,20 +218,21 @@ export default function DashboardPage() {
     setFile(e.target.files?.[0] ?? null);
   }
 
-  // MODIFIKASI: Kirim file RAW (Binary) tanpa parsing PDF di frontend
   async function uploadFile() {
     if (!file || !selectedDiv) return alert("Pilih file dan divisi!");
     setLoading(true);
 
     try {
       const fd = new FormData();
-      // Langsung kirim file asli
       fd.append("file", file);
 
       const r = await fetch(`/upload/${selectedDiv}`, {
         method: "POST",
+        headers: { "X-Admin-Token": adminToken },
         body: fd,
       });
+
+      if (handleAuthError(r)) return;
 
       if (r.ok) {
         alert("Upload sukses! Dokumen baru aktif.");
@@ -137,14 +266,19 @@ export default function DashboardPage() {
 
   async function addDivision() {
     if (!newDivisionName.trim()) return alert("Nama divisi kosong");
+    if (newDivisionName.length > 100) return alert("Nama divisi maksimal 100 karakter");
 
     try {
-      // <--- Start Try Utama
       const r = await fetch("/division", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-Admin-Token": adminToken 
+        },
         body: JSON.stringify({ name: newDivisionName }),
       });
+
+      if (handleAuthError(r)) return;
 
       if (r.ok) {
         setNewDivisionName("");
@@ -166,27 +300,43 @@ export default function DashboardPage() {
         }
       }
     } catch (err) {
-      // <--- Catch untuk Try Utama (WAJIB ADA)
       console.error(err);
       alert("Gagal menghubungi server");
-    } // <--- Penutup Try Utama
-  } // <--- Penutup Fungsi
+    }
+  }
 
   async function updateDescription(id, newDesc) {
-    const r = await fetch(`/division/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ description: newDesc }),
-    });
-    if (r.ok) fetchDivisions();
+    if (newDesc.length > 500) return alert("Deskripsi divisi maksimal 500 karakter");
+    try {
+      const r = await fetch(`/division/${id}`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          "X-Admin-Token": adminToken 
+        },
+        body: JSON.stringify({ description: newDesc }),
+      });
+      if (handleAuthError(r)) return;
+      if (r.ok) fetchDivisions();
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async function deleteDivision(id) {
     if (!confirm("Hapus divisi ini? Data FAQ terkait akan hilang.")) return;
-    const r = await fetch(`/division/${id}`, { method: "DELETE" });
-    if (r.ok) {
-      alert("Divisi dihapus");
-      fetchDivisions();
+    try {
+      const r = await fetch(`/division/${id}`, { 
+        method: "DELETE",
+        headers: { "X-Admin-Token": adminToken }
+      });
+      if (handleAuthError(r)) return;
+      if (r.ok) {
+        alert("Divisi dihapus");
+        fetchDivisions();
+      }
+    } catch (e) {
+      console.error(e);
     }
   }
 
@@ -200,9 +350,11 @@ export default function DashboardPage() {
       const response = await fetch(`/admin/download/pdf/${safeFilename}`, {
         method: "GET",
         headers: {
-          "X-Admin-Secret": adminSecret,
+          "X-Admin-Token": adminToken,
         },
       });
+
+      if (handleAuthError(response)) return false;
 
       if (response.ok) {
         const blob = await response.blob();
@@ -266,11 +418,191 @@ export default function DashboardPage() {
   };
 
   // ---------------- UI ----------------
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E0F2FE] via-white to-[#FEF9C3] p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-2xl p-8 w-full max-w-md border border-blue-100"
+        >
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <Shield className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-blue-900">Admin Dashboard</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {authStep === "login" && "Login dengan akun admin Anda"}
+              {authStep === "forgot_email" && "Masukkan email untuk mereset password"}
+              {authStep === "forgot_reset" && "Jawab pertanyaan keamanan Anda"}
+            </p>
+          </div>
+
+          {authStep === "login" && (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-1">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@pindad.com"
+                  autoFocus
+                  required
+                  className="w-full p-3 border-2 border-blue-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-gray-800 bg-white text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-1">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="w-full p-3 border-2 border-blue-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-gray-800 bg-white text-sm"
+                />
+              </div>
+
+              {loginError && (
+                <p className="text-red-500 text-xs text-center font-medium">{loginError}</p>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full h-12 text-base font-semibold shadow-md bg-blue-900 hover:bg-blue-800 text-white transition-colors"
+                disabled={loginLoading || !email.trim() || !password.trim()}
+              >
+                {loginLoading ? "Memverifikasi..." : "Masuk"}
+              </Button>
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setAuthStep("forgot_email"); setLoginError(""); }}
+                  className="text-xs text-blue-600 hover:underline font-medium"
+                >
+                  Lupa Password?
+                </button>
+              </div>
+            </form>
+          )}
+
+          {authStep === "forgot_email" && (
+            <form onSubmit={handleForgotPasswordEmail} className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-1">Email Anda</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@pindad.com"
+                  autoFocus
+                  required
+                  className="w-full p-3 border-2 border-blue-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-gray-800 bg-white text-sm"
+                />
+              </div>
+
+              {loginError && (
+                <p className="text-red-500 text-xs text-center font-medium">{loginError}</p>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full h-12 text-base font-semibold shadow-md bg-blue-900 hover:bg-blue-800 text-white transition-colors"
+                disabled={loginLoading || !email.trim()}
+              >
+                {loginLoading ? "Memuat..." : "Minta Pertanyaan Keamanan"}
+              </Button>
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setAuthStep("login"); setLoginError(""); }}
+                  className="text-xs text-gray-600 hover:underline font-medium"
+                >
+                  Kembali ke Login
+                </button>
+              </div>
+            </form>
+          )}
+
+          {authStep === "forgot_reset" && (
+            <form onSubmit={handleForgotPasswordReset} className="space-y-4">
+              <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg text-sm text-blue-900 mb-2">
+                <span className="font-semibold block mb-0.5 text-xs text-blue-700 uppercase tracking-wide">Pertanyaan Keamanan:</span>
+                {securityQuestion}
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-1">Jawaban Anda</label>
+                <input
+                  type="text"
+                  value={securityAnswer}
+                  onChange={(e) => setSecurityAnswer(e.target.value)}
+                  placeholder="Ketik jawaban..."
+                  autoFocus
+                  required
+                  className="w-full p-3 border-2 border-blue-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-gray-800 bg-white text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-1">Password Baru</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Ketik password baru..."
+                  required
+                  className="w-full p-3 border-2 border-blue-100 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-gray-800 bg-white text-sm"
+                />
+              </div>
+
+              {loginError && (
+                <p className="text-red-500 text-xs text-center font-medium">{loginError}</p>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full h-12 text-base font-semibold shadow-md bg-blue-900 hover:bg-blue-800 text-white transition-colors"
+                disabled={loginLoading || !securityAnswer.trim() || !newPassword.trim()}
+              >
+                {loginLoading ? "Mereset..." : "Reset Password"}
+              </Button>
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setAuthStep("login"); setLoginError(""); }}
+                  className="text-xs text-gray-600 hover:underline font-medium"
+                >
+                  Batal dan Kembali
+                </button>
+              </div>
+            </form>
+          )}
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 space-y-4 min-h-screen font-sans flex flex-col bg-linear-to-br from-[#E0F2FE] via-white to-[#FEF9C3]">
-      <h1 className="text-2xl font-bold text-blue-900">
-        Admin Dashboard — FAQ & Upload
-      </h1>
+      <div className="flex justify-between items-center bg-white/50 backdrop-blur-md p-4 rounded-xl border border-blue-100/50">
+        <h1 className="text-2xl font-bold text-blue-900">
+          Admin Dashboard — FAQ & Upload
+        </h1>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => { setIsAuthenticated(false); setAdminToken(""); }}
+          className="flex items-center gap-2"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
+        </Button>
+      </div>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         {/* ==== LEFT: DIVISION LIST ==== */}
@@ -485,16 +817,6 @@ export default function DashboardPage() {
             <h2 className="text-sm font-semibold text-gray-600 shrink-0 mb-2">
               Recent FAQ
             </h2>
-            <div className="flex items-center gap-2 mb-3">
-              <input
-                type="password"
-                value={adminSecret}
-                onChange={(e) => setAdminSecret(e.target.value)}
-                className="text-xs border rounded px-2 py-1 flex-1 bg-gray-100 cursor-not-allowed text-gray-400"
-                placeholder="Admin Secret"
-                disabled
-              />
-            </div>
             <div className="space-y-2 overflow-y-auto flex-1 pr-1 max-h-[30vh]">
               {faqs.slice(0, 50).map((f) => (
                 <div
