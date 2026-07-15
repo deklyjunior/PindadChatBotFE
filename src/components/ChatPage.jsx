@@ -9,10 +9,8 @@ import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-// URL Backend
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
-// Fungsi Parser untuk memisahkan Text & Tag Redirect
 const parseMessageContent = (content) => {
   if (!content) return { text: "", redirectTarget: null };
 
@@ -20,25 +18,19 @@ const parseMessageContent = (content) => {
 
   let finalTarget = null;
 
-  // Gunakan .replace dengan fungsi callback untuk membersihkan SEMUA tag
   const cleanText = content.replace(redirectRegex, (match, id) => {
-    // Kita ambil ID dari tag pertama yang ditemukan untuk dijadikan prioritas tombol
-    // (Atau logika lain: ambil yang terakhir. Di sini kita ambil yang pertama)
     if (!finalTarget) {
       finalTarget = id.trim();
     }
-
-    // Kembalikan string kosong "" untuk MENGHAPUS tag dari tampilan teks
     return "";
   });
 
   return {
-    text: cleanText.trim(), // Teks sudah bersih dari semua tag
-    redirectTarget: finalTarget, // ID untuk tombol (misal: SCM)
+    text: cleanText.trim(),
+    redirectTarget: finalTarget,
   };
 };
 
-// Pertanyaan populer per divisi (Bisa tetap hardcoded atau dipindah ke backend nanti)
 const POPULAR_QUESTIONS = {
   HCM: [
     "Bagaimana cara melamar kerja di PT Pindad?",
@@ -69,21 +61,16 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-
-  // id divisi (dept) dari URL
   const divisionId = params.get("dept") || "HCM";
-
   const [divisionInfo, setDivisionInfo] = useState(null);
-  const [allDivisions, setAllDivisions] = useState([]); // State untuk menyimpan SEMUA divisi
+  const [allDivisions, setAllDivisions] = useState([]); 
   const sessionIdRef = useRef(uuidv4());
-
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [popular, setPopular] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
 
-  // 1. Fetch info divisi saat ini DAN daftar semua divisi untuk keperluan redirect
   useEffect(() => {
     async function fetchInfo() {
       try {
@@ -105,7 +92,6 @@ export default function ChatPage() {
   const displayDiv = divisionInfo?.name || divisionId;
   const displayDesc = divisionInfo?.description || "Layanan Umum PT Pindad";
 
-  // 2. Set pertanyaan populer lokal
   useEffect(() => {
     setPopular(
       POPULAR_QUESTIONS[divisionId] ?? [
@@ -113,16 +99,13 @@ export default function ChatPage() {
         "Apa saja produk unggulan Pindad?",
       ],
     );
-    // Reset messages ketika pindah divisi agar user merasa di room baru
     setMessages([]);
   }, [divisionId]);
 
-  // 3. Auto scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
-  // Fungsi Pindah Divisi
   const handleSwitchDivision = (targetDivId) => {
     if (targetDivId === "MARKETING") {
       window.open("mailto:sales@pindad.com");
@@ -139,7 +122,6 @@ export default function ChatPage() {
       return;
     }
 
-    // Tampilkan pertanyaan user
     setMessages((m) => [...m, { id: Date.now(), role: "user", content }]);
     setInput("");
     setIsLoading(true);
@@ -302,7 +284,6 @@ export default function ChatPage() {
 
                   {/* IIFE untuk logika pencarian divisi */}
                   {(() => {
-                    // Cari divisi di database berdasarkan ID dari tag [[REDIRECT:XXX]]
                     const targetDiv = allDivisions.find(
                       (d) => d.id === redirectTarget,
                     );
@@ -319,7 +300,6 @@ export default function ChatPage() {
                       );
                     }
 
-                    // Fallback khusus untuk Email Sales (jika masih diperlukan)
                     if (redirectTarget === "MARKETING") {
                       return (
                         <button
@@ -332,7 +312,7 @@ export default function ChatPage() {
                       );
                     }
 
-                    return null; // Tidak render apa-apa jika ID tidak ditemukan
+                    return null;
                   })()}
                 </div>
               )}

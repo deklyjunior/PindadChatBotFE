@@ -6,9 +6,6 @@ import { UploadCloud, Trash2, Download, Shield, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { Line } from "react-chartjs-2";
 
-// CATATAN: pdfjs dihapus agar pengiriman file dilakukan secara binary (raw)
-// untuk mencegah file corrupt saat didownload kembali.
-
 import {
   Chart as ChartJS,
   LineElement,
@@ -29,7 +26,6 @@ export default function DashboardPage() {
   const [unanswered, setUnanswered] = useState([]);
   const [newDivisionName, setNewDivisionName] = useState("");
   
-  // Authentication states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [adminToken, setAdminToken] = useState("");
@@ -37,8 +33,7 @@ export default function DashboardPage() {
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
 
-  // Forgot password flow states
-  const [authStep, setAuthStep] = useState("login"); // "login", "forgot_email", "forgot_reset"
+  const [authStep, setAuthStep] = useState("login");
   const [securityQuestion, setSecurityQuestion] = useState("");
   const [securityAnswer, setSecurityAnswer] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -64,7 +59,6 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, [isAuthenticated]);
 
-  // Helper function to handle auth errors
   function handleAuthError(r) {
     if (r.status === 401) {
       setIsAuthenticated(false);
@@ -75,7 +69,6 @@ export default function DashboardPage() {
     return false;
   }
 
-  // ---------------- AUTHENTICATION HANDLERS ----------------
   async function handleLogin(e) {
     if (e) e.preventDefault();
     if (!email.trim() || !password.trim()) return;
@@ -162,7 +155,6 @@ export default function DashboardPage() {
     }
   }
 
-  // ---------------- FETCH SECTION ----------------
   async function fetchDivisions() {
     try {
       const r = await fetch("/divisions", {
@@ -213,7 +205,6 @@ export default function DashboardPage() {
     }
   }
 
-  // ---------------- ACTIONS ----------------
   function onFileChange(e) {
     setFile(e.target.files?.[0] ?? null);
   }
@@ -340,7 +331,6 @@ export default function DashboardPage() {
     }
   }
 
-  // ---------------- DOWNLOAD FUNCTION ----------------
   async function downloadPdf(filename) {
     if (!filename) return;
 
@@ -377,47 +367,38 @@ export default function DashboardPage() {
     }
   }
 
-  // ========================================================
-  // MODIFIKASI: HANDLE UPLOAD (DENGAN ALERT + AUTO BACKUP)
-  // ========================================================
   const handleUploadClick = async () => {
     if (!file || !selectedDiv) {
       alert("Mohon pilih file dan divisi terlebih dahulu.");
       return;
     }
 
-    // 1. TAMPILKAN ALERT KONFIRMASI (Sesuai Permintaan)
     const isConfirmed = window.confirm(
       "Apakah Anda yakin ingin mengupload dokumen baru? Dokumen lama pada divisi ini akan terhapus (Sebaiknya medownload dulu Dokumen FAQ sebelumya).",
     );
 
-    // Jika user klik Cancel, batalkan proses
     if (!isConfirmed) return;
 
-    // 2. Jika OK, Lakukan Pengecekan Dokumen Lama
     const existingDoc = faqs.find(
       (f) => f.division_id === selectedDiv && f.question.startsWith("File: "),
     );
 
     if (existingDoc) {
-      // 3. Jika ada dokumen lama -> Download dulu
       const filename =
         existingDoc.filename || existingDoc.question.replace("File: ", "");
       console.log(`Mengunduh backup dokumen lama: ${filename}`);
 
       await downloadPdf(filename);
 
-      // Beri jeda 1 detik agar download sempat berjalan
       setTimeout(() => {
         uploadFile();
       }, 1000);
     } else {
-      // 4. Jika tidak ada dokumen lama -> Langsung Upload
+
       uploadFile();
     }
   };
 
-  // ---------------- UI ----------------
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E0F2FE] via-white to-[#FEF9C3] p-4">
@@ -706,9 +687,8 @@ export default function DashboardPage() {
                     {
                       label: "Hits",
                       data: stats.monthly.map((x) => x.count),
-                      // Warna Chart disesuaikan dengan tema
-                      borderColor: "#1e3a8a", // Blue-900
-                      backgroundColor: "#c89721", // Gold accent point
+                      borderColor: "#1e3a8a",
+                      backgroundColor: "#c89721",
                       borderWidth: 2,
                       pointRadius: 4,
                       pointBackgroundColor: "#c89721",

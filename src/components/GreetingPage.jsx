@@ -19,19 +19,17 @@ function GreetingPage() {
   const [showIntro, setShowIntro] = useState(!fromChat);
   const [departments, setDepartments] = useState([]);
 
-  // Intro screen
   useEffect(() => {
     if (!fromChat) {
-      const timer = setTimeout(() => setShowIntro(false), 5000); // Extended duration to 5s
+      const timer = setTimeout(() => setShowIntro(false), 5000);
       return () => clearTimeout(timer);
     }
     if (fromChat) {
-      // bersihkan state history ketika kembali dari chat
+
       window.history.replaceState({}, document.title);
     }
   }, [fromChat]);
 
-  // map icon per ID divisi
   const getIconForDivision = (id) => {
     switch (id) {
       case "HCM":
@@ -49,13 +47,10 @@ function GreetingPage() {
     }
   };
 
-  // Ambil divisi dari backend
   useEffect(() => {
     fetch(`${API_BASE_URL}/divisions`)
       .then((r) => r.json())
       .then((list) => {
-        // Kita tidak perlu NAME_MAP lagi karena backend sudah menyimpan nama lengkap
-        // saat admin membuat divisi baru di Dashboard.
 
         const icons = [
           <UserCheck key="ic1" />,
@@ -68,8 +63,6 @@ function GreetingPage() {
         setDepartments(
           list.map((d, idx) => ({
             id: d.id,
-            // LOGIKA BARU: Gunakan nama dari Backend.
-            // Jika nama dari backend sama dengan ID (kasus lama), coba format sedikit.
             name: d.name || d.id.replace(/_/g, " "),
             icon: icons[idx % icons.length],
             path: `/chat?dept=${encodeURIComponent(d.id)}`,
@@ -78,11 +71,9 @@ function GreetingPage() {
       })
       .catch((err) => {
         console.error("Gagal load divisi, menggunakan fallback lokal", err);
-        // ... kode fallback error tetap sama ...
       });
   }, []);
 
-  // Determine animation delays based on whether we are coming from chat
   const baseDelay = fromChat ? 0 : 2.5;
 
   return (
